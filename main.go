@@ -27,7 +27,7 @@ var (
 	proxy      *goproxy.ProxyHttpServer
 	server     *http.Server
 	isRunning  bool
-	cacheDir   = "cache"
+	cacheDir   = getCacheDir()
 	mu         sync.Mutex
 	reqCount   int
 	cacheHits  int
@@ -206,6 +206,15 @@ func setMacOSProxy(enable bool) error {
 		log.Printf("⛔ Системный прокси выключен (macOS, %s)\n", service)
 	}
 	return nil
+}
+func getCacheDir() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "cache"
+	}
+	dir := filepath.Join(home, ".microproxy", "cache")
+	os.MkdirAll(dir, 0755)
+	return dir
 }
 
 func main() {

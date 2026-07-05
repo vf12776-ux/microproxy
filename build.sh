@@ -9,5 +9,5 @@ GOOS=windows GOARCH=amd64 go build -o microproxy.exe
 echo "Сборка для macOS..."
 GOOS=darwin GOARCH=amd64 go build -o microproxy-macos
 
-echo "Готово!"
+echo "✅ Сборка завершена!"
 ls -lh microproxy-*
