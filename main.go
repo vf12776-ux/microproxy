@@ -220,6 +220,7 @@ func getCacheDir() string {
 func main() {
 	a := app.New()
 	w := a.NewWindow("MicroProxy - Кэширующий прокси")
+	w.SetIcon(resourceIcon256Png)
 
 	title := widget.NewLabelWithStyle("MicroProxy v0.3", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
 
