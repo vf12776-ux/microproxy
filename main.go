@@ -3,9 +3,16 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"log"
+	"math/big"
 	"net/http"
 	"os"
 	"os/exec"
@@ -56,6 +63,17 @@ func startProxy() {
 	proxy = goproxy.NewProxyHttpServer()
 	proxy.Verbose = false
 
+	// Генерируем корневой сертификат при первом запуске
+	ca, err := tls.LoadX509KeyPair("ca.crt", "ca.key")
+	if err != nil {
+		log.Println("Генерируем корневой сертификат...")
+		generateCA()
+		ca, _ = tls.LoadX509KeyPair("ca.crt", "ca.key")
+	}
+
+	// Настраиваем MITM для HTTPS
+	goproxy.GoproxyCa = ca
+	proxy.OnRequest().HandleConnect(goproxy.AlwaysMitm)
 	proxy.OnRequest().DoFunc(func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 		url := r.URL.String()
 		cachePath := getCachePath(url)
@@ -85,7 +103,10 @@ func startProxy() {
 		// Создаем новый запрос с чистым контекстом
 		newReq := r.Clone(context.Background())
 		newReq.RequestURI = ""
-		tr := &http.Transport{Proxy: nil} // Игнорируем http_proxy
+		tr := &http.Transport{
+			Proxy:           nil,
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
 		client := &http.Client{
 			Transport: tr,
 			Timeout:   30 * time.Second,
@@ -123,7 +144,6 @@ func startProxy() {
 		}
 	}()
 }
-
 func stopProxy() {
 	if server != nil {
 		server.Close()
@@ -215,6 +235,26 @@ func getCacheDir() string {
 	dir := filepath.Join(home, ".microproxy", "cache")
 	os.MkdirAll(dir, 0755)
 	return dir
+}
+
+func generateCA() {
+	priv, _ := rsa.GenerateKey(rand.Reader, 2048)
+	template := x509.Certificate{
+		SerialNumber:          big.NewInt(1),
+		Subject:               pkix.Name{CommonName: "MicroProxy CA"},
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(10 * 365 * 24 * time.Hour),
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+	}
+	certDER, _ := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
+	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)})
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
+	os.WriteFile("ca.crt", certPEM, 0644)
+	os.WriteFile("ca.key", keyPEM, 0600)
+	log.Println("✅ Корневой сертификат создан: ca.crt")
+	log.Println("⚠️  Установи ca.crt в систему (см. инструкцию)")
 }
 
 func main() {
