@@ -16,4 +16,5 @@ old-c-version/
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.dbca.crt
+ca.key

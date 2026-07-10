@@ -19,6 +19,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -73,7 +74,21 @@ func startProxy() {
 
 	// Настраиваем MITM для HTTPS
 	goproxy.GoproxyCa = ca
-	proxy.OnRequest().HandleConnect(goproxy.AlwaysMitm)
+
+	// AI-сервисы исключаем из MITM (они используют WebSocket/SSE)
+	aiDomains := []string{
+		"chatgpt.com", "openai.com", "anthropic.com", "claude.ai",
+		"deepseek.com", "qwen.ai", "gemini.google.com", "copilot.microsoft.com",
+	}
+	proxy.OnRequest().HandleConnectFunc(func(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
+		for _, domain := range aiDomains {
+			if strings.HasSuffix(host, domain) {
+				return goproxy.OkConnect, host
+			}
+		}
+		return goproxy.MitmConnect, host
+	})
+
 	proxy.OnRequest().DoFunc(func(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 		url := r.URL.String()
 		cachePath := getCachePath(url)
