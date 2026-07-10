@@ -78,6 +78,7 @@ func startProxy() {
 	aiDomains := []string{
 		"chatgpt.com", "openai.com", "anthropic.com", "claude.ai",
 		"deepseek.com", "qwen.ai", "gemini.google.com", "copilot.microsoft.com",
+		"push.services.mozilla.com", "notice.kwork.ru",
 	}
 	proxy.OnRequest().HandleConnectFunc(func(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
 		for _, domain := range aiDomains {
