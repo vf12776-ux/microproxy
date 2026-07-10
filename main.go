@@ -75,14 +75,13 @@ func startProxy() {
 	// Настраиваем MITM для HTTPS
 	goproxy.GoproxyCa = ca
 
-	// AI-сервисы исключаем из MITM (они используют WebSocket/SSE)
 	aiDomains := []string{
 		"chatgpt.com", "openai.com", "anthropic.com", "claude.ai",
 		"deepseek.com", "qwen.ai", "gemini.google.com", "copilot.microsoft.com",
 	}
 	proxy.OnRequest().HandleConnectFunc(func(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
 		for _, domain := range aiDomains {
-			if strings.HasSuffix(host, domain) {
+			if strings.Contains(host, domain) {
 				return goproxy.OkConnect, host
 			}
 		}
