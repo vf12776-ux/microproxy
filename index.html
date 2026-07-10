@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroProxy — Скачать</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        h1 { color: #333; }
+        .btn { display: inline-block; padding: 15px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+        .btn:hover { background: #0056b3; }
+        .instructions { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        code { background: #e0e0e0; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>MicroProxy</h1>
+    <p>Прокси-сервер с кэшированием HTTP/HTTPS</p>
+    
+    <div id="download"></div>
+    
+    <div class="instructions">
+        <h3>После скачивания:</h3>
+        <ol>
+            <li>Распакуй архив</li>
+            <li>Открой терминал в папке</li>
+            <li>Выполни: <code>sudo ./install.sh</code></li>
+            <li>Запусти MicroProxy из меню приложений</li>
+        </ol>
+    </div>
+
+    <script>
+        const os = navigator.platform.toLowerCase();
+        let downloadUrl, filename;
+        
+        if (os.includes('linux')) {
+            downloadUrl = 'https://github.com/vf12776-ux/microproxy/releases/latest/download/microproxy-linux';
+            filename = 'microproxy-linux';
+        } else if (os.includes('win')) {
+            downloadUrl = 'https://github.com/vf12776-ux/microproxy/releases/latest/download/microproxy-windows-latest.exe';
+            filename = 'microproxy.exe';
+        } else if (os.includes('mac')) {
+            downloadUrl = 'https://github.com/vf12776-ux/microproxy/releases/latest/download/microproxy-macos-latest';
+            filename = 'microproxy-macos';
+        } else {
+            downloadUrl = 'https://github.com/vf12776-ux/microproxy/releases/latest';
+            filename = 'выбрать вручную';
+        }
+        
+        document.getElementById('download').innerHTML = `
+            <a href="${downloadUrl}" download="${filename}" class="btn">Скачать для ${os.includes('linux') ? 'Linux' : os.includes('win') ? 'Windows' : os.includes('mac') ? 'macOS' : 'вашей ОС'}</a>
+        `;
+    </script>
+</body>
+</html>
