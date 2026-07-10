@@ -160,6 +160,7 @@ func startProxy() {
 	}()
 }
 func stopProxy() {
+	setSystemProxy(false)
 	if server != nil {
 		server.Close()
 		server = nil
